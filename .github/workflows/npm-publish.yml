@@ -17,6 +17,9 @@ jobs:
         with:
           node-version: 18
           registry-url: https://registry.npmjs.org/
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 8
       - run: pnpm install
       - run: pnpm run build:prod
       - run: pnpm publish

@@ -17,8 +17,8 @@ jobs:
         with:
           node-version: 18
           registry-url: https://registry.npmjs.org/
-      - run: npm ci
-      - run: npm run build:prod
-      - run: npm publish
+      - run: pnpm install
+      - run: pnpm run build:prod
+      - run: pnpm publish
         env:
           NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}

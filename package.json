@@ -25,6 +25,7 @@
     "build": "rimraf dist && tsc",
     "lint": "eslint src/",
     "lint:fix": "npm run lint -- --fix",
+    "lint:fix:cache": "npm run lint:fix -- --cache",
     "format": "prettier . --write",
     "prepare": "husky install"
   },
@@ -45,7 +46,7 @@
     "typescript-eslint": "^7.8.0"
   },
   "lint-staged": {
-    "*.js": "eslint --cache --fix",
-    "*.--write": "prettier --write"
+    "*.ts": "npm run lint:fix:cache",
+    "*.--write": "npm run format"
   }
 }

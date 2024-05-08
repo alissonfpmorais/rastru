@@ -2,7 +2,7 @@ import { Inject, Injectable } from "@nestjs/common";
 import {
   MODULE_OPTIONS_TOKEN,
   ResponseHandlerItem,
-  Span,
+  SpanItem,
   Trace,
   TracingOptions,
 } from "./rastru.module-definition";
@@ -43,7 +43,7 @@ export class RastruService {
       : RastruService._defaultIsTraceEnableFn(traceName);
   }
 
-  appendSpanToTrace(traceName: string, span: Span): Trace {
+  appendSpanToTrace(traceName: string, span: SpanItem): Trace {
     return this._options.appendSpanToTrace(traceName, span);
   }
 

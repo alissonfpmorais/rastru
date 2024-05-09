@@ -1,6 +1,6 @@
 {
   "name": "@alissonfpmorais/rastru",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "A tiny library for tracing spans in nestjs apps",
   "author": "Alisson Morais",
   "license": "MIT",

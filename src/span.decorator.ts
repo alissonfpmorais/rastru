@@ -20,18 +20,27 @@ export function Span(traceName: string): MethodDecorator {
     descriptor.value = function (...args: unknown[]): unknown {
       const srv: RastruService = this.__span_decorator_rastru__;
 
-      if (!this.__span_decorator_rastru__.isTraceEnabled(traceName))
+      if (!srv || !srv.isTraceEnabled(traceName))
         return previousFn.apply(this, args);
 
-      let trace = srv.getOrCreateTrace(traceName);
-      trace = srv.appendSpanToTrace(traceName, {
-        targetName: targetName,
-        startTime: new Date().toISOString(),
-        endTime: null,
-        spanTime: null,
-        params: srv.sanitizeInput(traceName, targetName, args),
-        response: undefined,
-      });
+      let trace: Trace;
+
+      try {
+        srv.getOrCreateTrace(traceName);
+
+        trace = srv.appendSpanToTrace(traceName, {
+          targetName: targetName,
+          startTime: new Date().toISOString(),
+          endTime: null,
+          spanTime: null,
+          params: srv.sanitizeInput(traceName, targetName, args),
+          response: undefined,
+        });
+      } catch (_error) {
+        // Noop
+      }
+
+      if (!trace) return previousFn.apply(this, args);
 
       const spanIndex = trace.spans.length - 1;
       const spanStartTime = process.hrtime.bigint();
@@ -76,30 +85,34 @@ function finishSpan(
   spanStartTime: bigint,
   response: unknown,
 ): Trace {
-  const targetName = trace.spans[spanIndex].targetName;
+  try {
+    const targetName = trace.spans[spanIndex].targetName;
 
-  trace.spans[spanIndex].endTime = new Date().toISOString();
-  trace.spans[spanIndex].spanTime = Number(
-    process.hrtime.bigint() - spanStartTime,
-  );
-
-  if (response instanceof Error)
-    trace.spans[spanIndex].response = {
-      name: response.name,
-      message: response.message,
-      stack: response.stack,
-    };
-  else
-    trace.spans[spanIndex].response = srv.sanitizeOutput(
-      traceName,
-      targetName,
-      response,
+    trace.spans[spanIndex].endTime = new Date().toISOString();
+    trace.spans[spanIndex].spanTime = Number(
+      process.hrtime.bigint() - spanStartTime,
     );
 
-  const nextTrace = srv.setTrace(traceName, trace);
+    if (response instanceof Error)
+      trace.spans[spanIndex].response = {
+        name: response.name,
+        message: response.message,
+        stack: response.stack,
+      };
+    else
+      trace.spans[spanIndex].response = srv.sanitizeOutput(
+        traceName,
+        targetName,
+        response,
+      );
 
-  if (nextTrace.spans.every((span: SpanItem) => span.endTime !== null))
-    srv.dispatchTrace(traceName);
+    const nextTrace = srv.setTrace(traceName, trace);
 
-  return nextTrace;
+    if (nextTrace.spans.every((span: SpanItem) => span.endTime !== null))
+      srv.dispatchTrace(traceName);
+
+    return nextTrace;
+  } catch (_error) {
+    return null;
+  }
 }

@@ -89,10 +89,14 @@ export class RastruService {
     reject: (error: unknown) => void,
     fallback: () => unknown,
   ): unknown {
-    for (let i: number = 0; i < this._responseHandlers.length; i++) {
-      const { instanceType, instanceHandler } = this._responseHandlers[i];
-      if (response instanceof instanceType)
-        return instanceHandler(response, resolve, reject);
+    try {
+      for (let i: number = 0; i < this._responseHandlers.length; i++) {
+        const { instanceType, instanceHandler } = this._responseHandlers[i];
+        if (response instanceof instanceType)
+          return instanceHandler(response, resolve, reject);
+      }
+    } catch (_error) {
+      // Noop
     }
 
     return fallback();

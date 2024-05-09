@@ -9,9 +9,15 @@ import {
 
 @Injectable()
 export class RastruService {
+  private readonly _hasToDeepClone: boolean;
   private readonly _responseHandlers: ResponseHandlerItem[];
 
   constructor(@Inject(MODULE_OPTIONS_TOKEN) private _options: TracingOptions) {
+    this._hasToDeepClone =
+      typeof _options.sanitizeDeepCloningEnabled === "boolean"
+        ? _options.sanitizeDeepCloningEnabled
+        : true;
+
     this._responseHandlers = [
       {
         instanceType: Promise,
@@ -78,7 +84,7 @@ export class RastruService {
       ? this._options.sanitizeOutput(
           traceName,
           targetName,
-          RastruService._deepClone(output),
+          this._hasToDeepClone ? RastruService._deepClone(output) : output,
         )
       : RastruService._defaultSanitizeOutputFn(traceName, targetName, output);
   }
@@ -127,6 +133,6 @@ export class RastruService {
   }
 
   private static _deepClone<Value>(value: Value): Value {
-    return structuredClone(value);
+    return JSON.parse(JSON.stringify(value));
   }
 }

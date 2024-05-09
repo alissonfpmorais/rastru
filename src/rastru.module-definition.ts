@@ -43,6 +43,7 @@ export type TracingOptions = {
   setTrace: (traceName: string, trace: Trace) => Trace;
 
   // Sanitize
+  sanitizeDeepCloningEnabled?: boolean;
   sanitizeInput?: (
     traceName: string,
     targetName: string,

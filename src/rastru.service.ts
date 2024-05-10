@@ -133,6 +133,6 @@ export class RastruService {
   }
 
   private static _deepClone<Value>(value: Value): Value {
-    return JSON.parse(JSON.stringify(value));
+    return structuredClone(value);
   }
 }

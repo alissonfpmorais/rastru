@@ -70,7 +70,7 @@ export class RastruService {
       ? this._options.sanitizeInput(
           traceName,
           targetName,
-          RastruService._deepClone(input),
+          this._hasToDeepClone ? RastruService._deepClone(input) : input,
         )
       : RastruService._defaultSanitizeInputFn(traceName, targetName, input);
   }

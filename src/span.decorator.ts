@@ -57,9 +57,25 @@ export function Span(traceName: string): MethodDecorator {
       return srv.handleResponse(
         response,
         (output: unknown) =>
-          finishSpan(srv, traceName, trace, spanIndex, spanStartTime, output),
+          finishSpan(
+            srv,
+            traceName,
+            trace,
+            spanIndex,
+            spanStartTime,
+            output,
+            undefined,
+          ),
         (error: unknown) =>
-          finishSpan(srv, traceName, trace, spanIndex, spanStartTime, error),
+          finishSpan(
+            srv,
+            traceName,
+            trace,
+            spanIndex,
+            spanStartTime,
+            undefined,
+            error,
+          ),
         () => {
           finishSpan(
             srv,
@@ -67,7 +83,8 @@ export function Span(traceName: string): MethodDecorator {
             trace,
             spanIndex,
             spanStartTime,
-            typeof response !== "undefined" ? response : error,
+            response,
+            error,
           );
           if (error) throw error;
           return response;
@@ -84,6 +101,7 @@ function finishSpan(
   spanIndex: number,
   spanStartTime: bigint,
   response: unknown,
+  error: unknown,
 ): Trace {
   try {
     const targetName = trace.spans[spanIndex].targetName;
@@ -93,18 +111,20 @@ function finishSpan(
       process.hrtime.bigint() - spanStartTime,
     );
 
-    if (response instanceof Error)
+    if (typeof error !== "undefined" && error instanceof Error) {
       trace.spans[spanIndex].response = {
-        name: response.name,
-        message: response.message,
-        stack: response.stack,
+        name: error.name,
+        message: error.message,
       };
-    else
+    } else if (typeof error !== "undefined") {
+      trace.spans[spanIndex].response = `<${(typeof error).toUpperCase()}>`;
+    } else {
       trace.spans[spanIndex].response = srv.sanitizeOutput(
         traceName,
         targetName,
         response,
       );
+    }
 
     const nextTrace = srv.setTrace(traceName, trace);
 

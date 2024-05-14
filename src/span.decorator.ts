@@ -33,6 +33,7 @@ export function Span(traceName: string): MethodDecorator {
           startTime: new Date().toISOString(),
           endTime: null,
           spanTime: null,
+          isSuccess: false,
           params: srv.sanitizeInput(traceName, targetName, args),
           response: undefined,
         });
@@ -119,6 +120,7 @@ function finishSpan(
     } else if (typeof error !== "undefined") {
       trace.spans[spanIndex].response = `<${(typeof error).toUpperCase()}>`;
     } else {
+      trace.spans[spanIndex].isSuccess = true;
       trace.spans[spanIndex].response = srv.sanitizeOutput(
         traceName,
         targetName,

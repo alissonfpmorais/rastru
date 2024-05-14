@@ -14,6 +14,7 @@ export type SpanItem = {
   startTime: string;
   endTime: string | null;
   spanTime: number;
+  isSuccess: boolean;
   params: unknown[];
   response: unknown;
 };

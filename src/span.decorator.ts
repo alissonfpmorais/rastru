@@ -14,14 +14,13 @@ export function Span(traceName: string): MethodDecorator {
   ) => {
     injectTrace(target, "__span_decorator_rastru__");
 
-    const previousFn = descriptor.value;
-    const targetName = `${target.constructor.name}.${previousFn.name}`;
-
-    descriptor.value = function (...args: unknown[]): unknown {
+    const originalMethod = descriptor.value;
+    const targetName = `${target.constructor.name}.${originalMethod.name}`;
+    const wrappedMethod = function (...args: unknown[]): unknown {
       const srv: RastruService = this.__span_decorator_rastru__;
 
       if (!srv || !srv.isTraceEnabled(traceName))
-        return previousFn.apply(this, args);
+        return originalMethod.apply(this, args);
 
       let trace: Trace;
 
@@ -41,7 +40,7 @@ export function Span(traceName: string): MethodDecorator {
         // Noop
       }
 
-      if (!trace) return previousFn.apply(this, args);
+      if (!trace) return originalMethod.apply(this, args);
 
       const spanIndex = trace.spans.length - 1;
       const spanStartTime = process.hrtime.bigint();
@@ -50,7 +49,7 @@ export function Span(traceName: string): MethodDecorator {
       let error: unknown;
 
       try {
-        response = previousFn.apply(this, args);
+        response = originalMethod.apply(this, args);
       } catch (exception) {
         error = exception;
       }
@@ -92,6 +91,17 @@ export function Span(traceName: string): MethodDecorator {
         },
       );
     };
+
+    Object.defineProperty(wrappedMethod, 'name', {
+      value: originalMethod.name,
+      configurable: true
+    });
+
+    Object.setPrototypeOf(wrappedMethod, Object.getPrototypeOf(originalMethod));
+    
+    descriptor.value = wrappedMethod;
+
+    return descriptor;
   }) as MethodDecorator;
 }
 
